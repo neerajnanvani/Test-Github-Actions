@@ -14,7 +14,7 @@ jobs:
       - name: Download file
         run: |
           echo "Starting the download"
-          curl -L https://download.moodle.org/environment/environment.zip enviroment.zip
+          wget https://download.moodle.org/environment/environment.zip -O environment.zip
           echo "Download completed"
       - name: Create branch
         run: |
