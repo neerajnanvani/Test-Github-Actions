@@ -46,9 +46,9 @@ jobs:
         run : |
           PR_NUMBER=${{ steps.cpr.outputs.pull-request-number }}
           echo $PR_NUMBER
-        if: ${{ steps.cpr.outputs.pull-request-number }}
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-          merge-method: squash
-          token: "${{ secrets.GITHUB_TOKEN }}"
+        # if: ${{ steps.cpr.outputs.pull-request-number }}
+        # uses: peter-evans/enable-pull-request-automerge@v3
+        # with:
+        #   pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+        #   merge-method: squash
+        #   token: "${{ secrets.GITHUB_TOKEN }}"
