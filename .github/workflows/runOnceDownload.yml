@@ -9,7 +9,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   run-once:
-    if: ${{ github.event.schedule.runs_on == formatDateTime(now(), '%Y-%m-%d') }}
+    # if: ${{ github.event.schedule.runs_on == formatDateTime(now(), '%Y-%m-%d') }}
     runs-on: ubuntu-latest
     steps:
       - name: Download file
