@@ -1,0 +1,35 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Run Action One Time
+
+# Controls when the workflow will run
+on:
+  schedule:
+    - cron: '0 12 * * *' # Run at 12:00 PM UTC
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  run-once:
+    if: ${{ github.event.schedule.runs_on == formatDateTime(now(), '%Y-%m-%d') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download file
+        run: |
+          curl -L https://download.moodle.org/environment/environment.zip enviroment.zip
+      - name: Create branch
+        run: |
+          git config --global user.email "neeraj.nanvani@vidyamantra@github.com"
+          git config --global user.name "neerajnanvani"
+          git checkout -b add-file
+          git add enviroment.zip
+          git commit -m "Add file.txt"
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: 'Add file.txt'
+          branch: add-file
+          title: 'Add file.txt'
+          body: 'Add file.txt'
+          labels: 'file'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
