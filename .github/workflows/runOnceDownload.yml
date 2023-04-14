@@ -11,6 +11,8 @@ jobs:
   run-once:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout to repo
+        uses: actions/checkout@v3
       - name: Download file
         run: |
           echo "Starting the download"
