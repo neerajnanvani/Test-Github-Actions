@@ -18,23 +18,23 @@ jobs:
           echo "Starting the download"
           wget https://download.moodle.org/environment/environment.zip -O environment.zip
           echo "Download completed"
-      - name: Create branch
-        run: |
-          echo "Setup username"
-          git config --global user.email "neeraj.nanvani@vidyamantra@github.com"
-          git config --global user.name "neerajnanvani"
-          echo "username setup"
-          pwd
-          ls -a
-          git checkout -b add-file
-          git add environment.zip
-          git commit -m "Add file.txt"
-          echo "Commit the file done"
+      # - name: Create branch
+      #   run: |
+      #     echo "Setup username"
+      #     git config --global user.email "neeraj.nanvani@vidyamantra@github.com"
+      #     git config --global user.name "neerajnanvani"
+      #     echo "username setup"
+      #     pwd
+      #     ls -a
+      #     git checkout -b add-file
+      #     git add environment.zip
+      #     git commit -m "Add file.txt"
+      #     echo "Commit the file done"
       - name: Create pull request
         uses: peter-evans/create-pull-request@v5
         with:
           commit-message: 'Add file.txt'
-          base: main
+          # base: main
           branch: add-file
           title: 'Add file.txt'
           body: 'Add file.txt'
