@@ -41,8 +41,9 @@ jobs:
           labels: 'file'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Console
-          run : |
+          run: |
             PR_NUMBER= steps.cpr.outputs.pull-request-number 
             echo $PR_NUMBER
 
