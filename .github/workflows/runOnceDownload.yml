@@ -23,7 +23,7 @@ jobs:
           git config --global user.name "neerajnanvani"
           echo "username setup"
           pwd
-          ls
+          ls -a
           git checkout -b add-file
           git add enviroment.zip
           git commit -m "Add file.txt"
