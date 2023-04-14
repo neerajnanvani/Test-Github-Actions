@@ -27,7 +27,7 @@ jobs:
           pwd
           ls -a
           git checkout -b add-file
-          git add enviroment.zip
+          git add environment.zip
           git commit -m "Add file.txt"
           echo "Commit the file done"
       - name: Create pull request
