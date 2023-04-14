@@ -43,8 +43,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Console
           run : |
-          PR_NUMBER= steps.cpr.outputs.pull-request-number 
-          echo $PR_NUMBER
+            PR_NUMBER= steps.cpr.outputs.pull-request-number 
+            echo $PR_NUMBER
 
       - name: Merge Pull Request
         if: steps.cpr.outputs.pull-request-operation == 'created'
