@@ -13,32 +13,47 @@ jobs:
     steps:
       - name: Checkout to repo
         uses: actions/checkout@v3
-      - name: Download file
+
+      - name: Install unzip
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Download environment file
         run: |
           echo "Starting the download"
           wget https://download.moodle.org/environment/environment.zip -O environment.zip
           echo "Download completed"
-      # - name: Create branch
-      #   run: |
-      #     echo "Setup username"
-      #     git config --global user.email "neeraj.nanvani@vidyamantra@github.com"
-      #     git config --global user.name "neerajnanvani"
-      #     echo "username setup"
-      #     pwd
-      #     ls -a
-      #     git checkout -b add-file
-      #     git add environment.zip
-      #     git commit -m "Add file.txt"
-      #     echo "Commit the file done"
+      
+      - name: Unzip file
+        run: unzip environment.zip
+
+      - name: Download Versions file
+        run: |
+          echo "Starting the download"
+          wget https://raw.githubusercontent.com/moodle/devdocs/main/data/versions.json -O versions.json
+          echo "Download completed"
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+
+      - name: Install Dependencies
+        run: npm install
+        
+      - name: Run JS file
+        uses: actions/exec@v2
+        with:
+          command: node test.js
+    
       - name: Create pull request
         id: cpr
         uses: peter-evans/create-pull-request@v5
         with:
-          commit-message: 'Add file.txt'
+          commit-message: 'Add versions.json'
           # base: main
           branch: add-file
-          title: 'Add file.txt'
-          body: 'Add file.txt'
+          title: 'Add versions.json'
+          body: 'Add versions.json file'
           labels: 'file'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
