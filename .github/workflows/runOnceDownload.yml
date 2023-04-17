@@ -33,17 +33,15 @@ jobs:
           echo "Download completed"
 
       - name: Install Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16.x'
 
       - name: Install Dependencies
         run: npm install
-        
+
       - name: Run JS file
-        uses: actions/exec@v2
-        with:
-          command: node test.js
+        run: node test.js
     
       - name: Create pull request
         id: cpr
