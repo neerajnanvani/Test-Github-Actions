@@ -53,6 +53,8 @@ function createRequirementsObject(singleEnvironmentObj) {
  */
 function mergeData(versionsData, environmentData) {
 
+  console.log("Merging files")
+
   let last3LtsData = [];
 
   let foundltsCount = 0;
@@ -191,6 +193,9 @@ async function getFileData() {
   }
 
 }
+
+
+console.log("Start executing function ");
 
 getFileData();
 
