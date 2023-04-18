@@ -24,7 +24,7 @@ jobs:
           echo "Download completed"
       
       - name: Unzip file
-        run: unzip environment.zip
+        run: unzip environment.zip -y
 
       - name: Download Versions file
         run: |
@@ -37,29 +37,32 @@ jobs:
         with:
           node-version: '16.x'
 
+      - name: Output for current directory
+        run: ls pwd
+
       - name: Install Dependencies
         run: npm install
 
       - name: Run JS file
         run: node test.js
     
-      - name: Create pull request
-        id: cpr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          commit-message: 'Add versions.json'
-          # base: main
-          branch: add-file
-          title: 'Add versions.json'
-          body: 'Add versions.json file'
-          labels: 'file'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create pull request
+      #   id: cpr
+      #   uses: peter-evans/create-pull-request@v5
+      #   with:
+      #     commit-message: 'Add versions.json'
+      #     # base: main
+      #     branch: add-file
+      #     title: 'Add versions.json'
+      #     body: 'Add versions.json file'
+      #     labels: 'file'
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-      - name: Merge Pull Request
-        if: steps.cpr.outputs.pull-request-operation == 'created'
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-          merge-method: squash
-          token: "${{ secrets.GITHUB_TOKEN }}"
+      # - name: Merge Pull Request
+      #   if: steps.cpr.outputs.pull-request-operation == 'created'
+      #   uses: peter-evans/enable-pull-request-automerge@v3
+      #   with:
+      #     pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+      #     merge-method: squash
+      #     token: "${{ secrets.GITHUB_TOKEN }}"
