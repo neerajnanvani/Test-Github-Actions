@@ -164,6 +164,7 @@ function mergeData(versionsData, environmentData) {
 
   fs.writeFile('./data/versions.json', JSON.stringify(last3LtsData, null, 4), (err) => {
     if (err) throw err;
+    console.log("Versions.json written successully");
   });
 
 }
