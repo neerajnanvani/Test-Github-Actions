@@ -173,7 +173,7 @@ async function getFileData() {
   try {
 
     // Read the contents of the XML file
-    const environmentXML = await fs.readFile('environment.xml');
+    const environmentXML = await fs.readFile('./environment/environment.xml');
 
 
     const versionsData = JSON.parse(await fs.readFile('versions.json', 'utf-8'));
