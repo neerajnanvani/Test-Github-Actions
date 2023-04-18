@@ -24,7 +24,7 @@ jobs:
           echo "Download completed"
       
       - name: Unzip file
-        run: unzip environment.zip -y
+        run: yes | unzip environment.zip 
 
       - name: Download Versions file
         run: |
