@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const { parseString } = require('xml2js');
+const path = require('path');
 
 const DOWNLOAD_LINK_PREFIX = "https://download.moodle.org/download.php/stable";
 
@@ -162,10 +163,33 @@ function mergeData(versionsData, environmentData) {
   }
 
 
-  fs.writeFile('./data/versions.json', JSON.stringify(last3LtsData, null, 4), (err) => {
-    if (err) throw err;
-    console.log("Versions.json written successully");
-  });
+  // Set the path to the folder and file
+  const folderName = 'data';
+  const fileName = 'versions.json';
+  const folderPath = path.join(__dirname, folderName);
+  const filePath = path.join(folderPath, fileName);
+  const fileData = JSON.stringify(last3LtsData, null, 4);
+
+  // Check if the folder exists
+  fs.access(folderPath)
+    .then(() => {
+      // Folder exists, write the file
+      return fs.writeFile(filePath, fileData);
+    })
+    .then(() => {
+      console.log(`File written to ${filePath}`);
+    })
+    .catch((err) => {
+      if (err.code === 'ENOENT') {
+        // Folder does not exist, create it and write the file
+        return fs.mkdir(folderPath, { recursive: true })
+          .then(() => fs.writeFile(filePath, fileData))
+          .then(() => {
+            console.log(`File written to ${filePath}`);
+          });
+      }
+      throw err;
+    });
 
 }
 
