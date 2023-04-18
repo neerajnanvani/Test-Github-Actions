@@ -38,7 +38,7 @@ jobs:
           node-version: '16.x'
 
       - name: Output for current directory
-        run: ls pwd
+        run: ls & pwd
 
       - name: Install Dependencies
         run: npm install
