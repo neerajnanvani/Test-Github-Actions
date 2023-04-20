@@ -48,9 +48,9 @@ jobs:
 
       - name: Run JS file
         run: |
-          node myScript.js
+          node test.js
           if [ $? -ne 0 ]; then
-            echo "Error occurred while running myScript.js"
+            echo "Error occurred while running test.js"
             exit 1
           fi
         
