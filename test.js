@@ -26,6 +26,9 @@ function getMoodleVersionCode(url) {
  * @returns {string} - The download url
  */
 function generateLatestDownloadLink(versionCode) {
+   if (true) {
+    throw new Error('Something went wrong');
+  }
   return `${DOWNLOAD_LINK_PREFIX}${versionCode}/moodle-latest-${versionCode}`;
 }
 
@@ -75,7 +78,7 @@ function createRequirementsObject(environment) {
 function writeVersionFile(fileData) {
 
   console.log("Writing version.json file")
-
+  
   // Set the path to the folder and file
   const folderName = 'data';
   const fileName = 'versions.json';
