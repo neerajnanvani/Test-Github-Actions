@@ -47,7 +47,12 @@ jobs:
         run: npm install
 
       - name: Run JS file
-        run: node test.js
+        run: |
+          node myScript.js
+          if [ $? -ne 0 ]; then
+            echo "Error occurred while running myScript.js"
+            exit 1
+          fi
         
       - name: Delete files
         run: rm -rf moodleVersions.json ./environment environment.zip
