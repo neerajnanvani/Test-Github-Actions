@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const { parseString } = require('xml2js');
 const path = require('path');
+const fetch = require('node-fetch');
 
 // moodle download link
 const DOWNLOAD_LINK_PREFIX = "https://download.moodle.org/download.php/stable";
@@ -108,7 +109,7 @@ function writeVersionFile(fileData) {
 
 async function checkCorrectLink(link) {
   try {
-    const response = await fetch(link);
+    const response = await fetch.default(link);
     const status = response.status;
     if (status >= 400) {
       throw new Error(`Link ${link} returned status ${status}`);
