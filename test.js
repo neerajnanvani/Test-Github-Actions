@@ -235,6 +235,11 @@ function mergeData(versionsData, envData) {
 async function main() {
   console.log("Start executing main function");
 
+  if (true) {
+    console.log("This is self generated error")
+    process.exit(1);
+  }
+
   try {
     // Read the contents of the XML file
     const environmentXML = await fs.readFile('./environment/environment.xml');
