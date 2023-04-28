@@ -26,9 +26,6 @@ function getMoodleVersionCode(url) {
  * @returns {string} - The download url
  */
 function generateLatestDownloadLink(versionCode) {
-   if (true) {
-    throw new Error('Something went wrong');
-  }
   return `${DOWNLOAD_LINK_PREFIX}${versionCode}/moodle-latest-${versionCode}`;
 }
 
@@ -109,6 +106,19 @@ function writeVersionFile(fileData) {
 
 }
 
+async function checkCorrectLink(link) {
+  try {
+    const response = await fetch(link);
+    const status = response.status;
+    if (status >= 400) {
+      throw new Error(`Link ${link} returned status ${status}`);
+    }
+    return status;
+  } catch (error) {
+    console.error(`Error checking link response code: ${error}`);
+    process.exit(1);
+  }
+}
 
 /**
  * Function to merge data of both files
@@ -116,7 +126,7 @@ function writeVersionFile(fileData) {
  * @param {object} versionsData - the versions file data
  * @param {object} envData - the environment file data
  */
-function mergeData(versionsData, envData) {
+async function mergeData(versionsData, envData) {
 
   console.log("Merging files")
 
@@ -148,17 +158,24 @@ function mergeData(versionsData, envData) {
     // get the current version code from the url specified in first release
     const versionCode = getMoodleVersionCode(currentVersion["releases"][0]["upgradePath"]);
 
-    const currentReleases = currentVersion["releases"].map((currentRelease, index) => {
+    const currentReleases = currentVersion["releases"].map(async (currentRelease, index) => {
 
       const downloadUrls = {
         "zip": "",
         "tgz": ""
       }
 
+      const linkChecked = false;
+
       // first version 
       // example  https://download.moodle.org/download.php/stable39/moodle-3.9.tgz
       if (index == 0) {
-        const link = generateOtherDownloadLink(versionCode, currentVersion.name)
+        const link = generateOtherDownloadLink(versionCode, currentVersion.name);
+
+        // check the link 
+        await checkCorrectLink(`${link}.zip`);
+
+        // check link function will automatically exit from the code flow if error occurred
         downloadUrls.zip = `${link}.zip`;
         downloadUrls.tgz = `${link}.tgz`;
       }
@@ -166,14 +183,27 @@ function mergeData(versionsData, envData) {
       // latest versions
       // example = https://download.moodle.org/download.php/stable311/moodle-latest-311.tgz
       else if (index == currentVersion["releases"].length - 1 && !currentRelease["notes"]) {
-        const link = generateLatestDownloadLink(versionCode)
+        const link = generateLatestDownloadLink(versionCode);
+
+        // check the link 
+        await checkCorrectLink(`${link}.zip`);
+
+        // check link function will automatically exit from the code flow if error occurred
         downloadUrls.zip = `${link}.zip`;
         downloadUrls.tgz = `${link}.tgz`;
       }
 
       // normal versions
       else {
-        const link = generateOtherDownloadLink(versionCode, currentRelease.name)
+        const link = generateOtherDownloadLink(versionCode, currentRelease.name);
+
+        // check the link once because other patterns will be same
+        if(!linkChecked) {
+          await checkCorrectLink(`${link}.zip`);
+          linkChecked = true;
+        }
+        
+        // check link function will automatically exit from the code flow if error occurred
         downloadUrls.zip = `${link}.zip`;
         downloadUrls.tgz = `${link}.tgz`;
       }
@@ -209,7 +239,7 @@ function mergeData(versionsData, envData) {
     ++envDataIndex;
   }
 
-  // iterate over the LTS version data to appned the environment requirement data 
+  // iterate over the LTS version data to append the environment requirement data 
   for (let i = 0; i < latestLtsData.length; ++i) {
 
     let currentVersion = latestLtsData[i].name;
@@ -235,16 +265,11 @@ function mergeData(versionsData, envData) {
 async function main() {
   console.log("Start executing main function");
 
-  if (true) {
-    console.log("This is self generated error")
-    process.exit(1);
-  }
-
   try {
     // Read the contents of the XML file
     const environmentXML = await fs.readFile('./environment/environment.xml');
 
-    // Read the constent of versions.json which 
+    // Read the content of versions.json which 
     const versionsData = JSON.parse(await fs.readFile('moodleVersions.json', 'utf-8'));
 
     // Parse the XML data using the xml2js module
