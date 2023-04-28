@@ -47,13 +47,15 @@ jobs:
         run: npm install
 
       - name: Run JS file
+        run: node test.js
+      
+      - name: Check for errors
+        if: ${{ failure() }}
         run: |
-          node test.js
-          if [ $? -ne 0 ]; then
-            echo "Error occurred while running test.js"
-            exit 1
-          fi
-        
+          echo "There was an error running the script."
+          echo "Error message: ${{ job.status }}"
+          exit 1
+
       - name: Delete files
         run: rm -rf moodleVersions.json ./environment environment.zip
     
