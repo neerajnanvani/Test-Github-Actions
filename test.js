@@ -1,19 +1,18 @@
-const fs = require('fs').promises;
-const { parseString } = require('xml2js');
-const path = require('path');
-const fetch = require('node-fetch');
+import { readFile, access, mkdir, writeFile } from "fs/promises";
+import { parseString } from "xml2js";
+import path from "path";
+import fetch from "node-fetch";
 
 // moodle download link
 const DOWNLOAD_LINK_PREFIX = "https://download.moodle.org/download.php/stable";
 
 /**
  * Function to strip the moodle version code from a url
- * 
+ *
  * @param {string} url - the url fetched from moodleversions file named as upgradePath
  * @returns {string} - A stable code like 401, 39, 400 etc
  */
 function getMoodleVersionCode(url) {
-
   // url like -> "https://docs.moodle.org/401/en/Upgrading",
   const splitUrl = url.split("/");
   return splitUrl[3];
@@ -22,7 +21,7 @@ function getMoodleVersionCode(url) {
 /**
  * Function to generate latest moodle download url
  * eg of url -> https://download.moodle.org/download.php/stable311/moodle-latest-311
- * 
+ *
  * @param {string} versionCode - The version code of moodle
  * @returns {string} - The download url
  */
@@ -34,7 +33,7 @@ function generateLatestDownloadLink(versionCode) {
  * Function to generate moodle download url other than latest
  * eg of url -> https://download.moodle.org/download.php/stable39/moodle-3.9
  * 39 is code and 3.9 is version
- * 
+ *
  * @param {string} versionCode - The version code of moodle
  * @param {string} version - The version of moodle
  * @returns {string} - The download url
@@ -45,12 +44,11 @@ function generateOtherDownloadLink(versionCode, version) {
 
 /**
  * Function to create Requirement key values for version json
- * 
+ *
  * @param {object} singleEnvironmentObj - the environment file single object
  * @returns {object} - the requirements object
  */
 function createRequirementsObject(environment) {
-
   const requirements = {};
 
   // extract all databases
@@ -70,66 +68,68 @@ function createRequirementsObject(environment) {
 
 /**
  * Function to write data in the versions.json file
- * 
+ *
  * @param {object} fileData - the json object needs to written in ./data.versions.json file
  */
-function writeVersionFile(fileData) {
+async function writeVersionFile(fileData) {
+  console.log("Writing version.json file");
 
-  console.log("Writing version.json file")
-  
   // Set the path to the folder and file
-  const folderName = 'data';
-  const fileName = 'versions.json';
+  const folderName = "data";
+  const fileName = "versions.json";
+  const __dirname = new URL(".", import.meta.url).pathname;
   const folderPath = path.join(__dirname, folderName);
   const filePath = path.join(folderPath, fileName);
   const data = JSON.stringify(fileData, null, 4);
 
-  // Check if the folder exists
-  fs.access(folderPath)
-    .then(() => {
-      // Folder exists, write the file
-      return fs.writeFile(filePath, data);
-    })
-    .then(() => {
+  try {
+    await access(folderPath);
+    // Folder exists, write the file
+    await writeFile(filePath, data);
+    console.log(`File written to ${filePath}`);
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      // Folder does not exist, create it and write the file
+      await mkdir(folderPath, { recursive: true });
+      await writeFile(filePath, data);
       console.log(`File written to ${filePath}`);
-    })
-    .catch((err) => {
-      if (err.code === 'ENOENT') {
-        // Folder does not exist, create it and write the file
-        return fs.mkdir(folderPath, { recursive: true })
-          .then(() => fs.writeFile(filePath, data))
-          .then(() => {
-            console.log(`File written to ${filePath}`);
-          });
-      }
+    } else {
       throw err;
-    });
-
+    }
+  }
 }
 
 async function checkCorrectLink(link) {
   try {
-    const response = await fetch.default(link);
+    const response = await fetch(link);
     const status = response.status;
     if (status >= 400) {
       throw new Error(`Link ${link} returned status ${status}`);
     }
-    return status;
+    return true;
   } catch (error) {
     console.error(`Error checking link response code: ${error}`);
-    process.exit(1);
+    return false;
   }
+}
+
+function generateDownloadLinksObject(link, isRemovedLink) {
+  const downloadLinks = {
+    zip : isRemovedLink ? `${link}.zip.removed` : `${link}.zip`,
+    tgz:  isRemovedLink ? `${link}.tgz.removed` : `${link}.tgz`,
+  }
+
+  return downloadLinks;
 }
 
 /**
  * Function to merge data of both files
- * 
+ *
  * @param {object} versionsData - the versions file data
  * @param {object} envData - the environment file data
  */
 async function mergeData(versionsData, envData) {
-
-  console.log("Merging files")
+  console.log("Merging files");
 
   // array to store latest Lts Data
   let latestLtsData = [];
@@ -140,85 +140,119 @@ async function mergeData(versionsData, envData) {
   let versionDataIndex = 0;
 
   // strip the last 3 latest lts versions data
-  while (ltsVersionsFound < 3 && versionDataIndex < versionsData["versions"].length) {
-
+  while (
+    ltsVersionsFound < 3 &&
+    versionDataIndex < versionsData["versions"].length
+  ) {
     const currentVersionData = versionsData["versions"][versionDataIndex];
 
     // increase the count of lts version found
     if (currentVersionData["isLTS"] === true) ltsVersionsFound++;
 
     // push only if current version have some releases ( no releases in case of latest announced versions )
-    if (currentVersionData["releases"].length) latestLtsData.push(currentVersionData);
+    if (currentVersionData["releases"].length)
+      latestLtsData.push(currentVersionData);
 
     ++versionDataIndex;
   }
 
   // map the data with download links of releases
-  latestLtsData = latestLtsData.map((currentVersion) => {
-
+  latestLtsData = await Promise.all(latestLtsData.map(async (currentVersion) => {
     // get the current version code from the url specified in first release
-    const versionCode = getMoodleVersionCode(currentVersion["releases"][0]["upgradePath"]);
+    const versionCode = getMoodleVersionCode(
+      currentVersion["releases"][0]["upgradePath"]
+    );
 
-    const currentReleases = currentVersion["releases"].map(async (currentRelease, index) => {
+    const currentReleases = await Promise.all(currentVersion["releases"].map(
+      async (currentRelease, index) => {
 
-      const downloadUrls = {
-        "zip": "",
-        "tgz": ""
-      }
+        let downloadUrls = {  };
 
-      const linkChecked = false;
+        // first version
+        // example  https://download.moodle.org/download.php/stable39/moodle-3.9.tgz
+        if (index == 0) {
+          const link = generateOtherDownloadLink(
+            versionCode,
+            currentVersion.name
+          );
 
-      // first version 
-      // example  https://download.moodle.org/download.php/stable39/moodle-3.9.tgz
-      if (index == 0) {
-        const link = generateOtherDownloadLink(versionCode, currentVersion.name);
+          // check the link
+          const isLinkValid = await checkCorrectLink(`${link}.zip`);
+          
+          let isRemovedLink = false;
 
-        // check the link 
-        await checkCorrectLink(`${link}.zip`);
+          if (!isLinkValid) {
+            const isRemovedLinkValid = await checkCorrectLink(`${link}.zip.removed`);
 
-        // check link function will automatically exit from the code flow if error occurred
-        downloadUrls.zip = `${link}.zip`;
-        downloadUrls.tgz = `${link}.tgz`;
-      }
+            if (!isRemovedLinkValid) process.exit(1);
+       
+            else isRemovedLink = true;
 
-      // latest versions
-      // example = https://download.moodle.org/download.php/stable311/moodle-latest-311.tgz
-      else if (index == currentVersion["releases"].length - 1 && !currentRelease["notes"]) {
-        const link = generateLatestDownloadLink(versionCode);
+          }
 
-        // check the link 
-        await checkCorrectLink(`${link}.zip`);
-
-        // check link function will automatically exit from the code flow if error occurred
-        downloadUrls.zip = `${link}.zip`;
-        downloadUrls.tgz = `${link}.tgz`;
-      }
-
-      // normal versions
-      else {
-        const link = generateOtherDownloadLink(versionCode, currentRelease.name);
-
-        // check the link once because other patterns will be same
-        if(!linkChecked) {
-          await checkCorrectLink(`${link}.zip`);
-          linkChecked = true;
+          downloadUrls = generateDownloadLinksObject(link, isRemovedLink);
+      
         }
-        
-        // check link function will automatically exit from the code flow if error occurred
-        downloadUrls.zip = `${link}.zip`;
-        downloadUrls.tgz = `${link}.tgz`;
+
+        // latest versions
+        // example = https://download.moodle.org/download.php/stable311/moodle-latest-311.tgz
+        else if (index == currentVersion["releases"].length - 1 && !currentRelease["notes"]) {
+          const link = generateLatestDownloadLink(versionCode);
+
+          // check the link
+          const isLinkValid = await checkCorrectLink(`${link}.zip`);
+
+          let isRemovedLink = false;
+
+          if (!isLinkValid) {
+            const isRemovedLinkValid = await checkCorrectLink(`${link}.zip.removed`);
+
+            if (!isRemovedLinkValid) process.exit(1);
+       
+            else isRemovedLink = true;
+            
+          }
+
+          downloadUrls = generateDownloadLinksObject(link, isRemovedLink);
+        }
+
+        // normal versions
+        else {
+          const link = generateOtherDownloadLink(
+            versionCode,
+            currentRelease.name
+          );
+
+          // check the link
+          const isLinkValid = await checkCorrectLink(`${link}.zip`);
+
+          let isRemovedLink = false;
+
+          if (!isLinkValid) {
+            const isRemovedLinkValid = await checkCorrectLink(
+              `${link}.zip.removed`
+            );
+
+            if (!isRemovedLinkValid) process.exit(1);
+       
+            else isRemovedLink = true;
+            
+          }
+
+          downloadUrls = generateDownloadLinksObject(link, isRemovedLink);
+        }
+
+        return { ...currentRelease, ...downloadUrls };
       }
+    ));
 
-      return { ...currentRelease, ...downloadUrls };
-    })
-
-    return { ...currentVersion, "releases": currentReleases };
-  })
+    return { ...currentVersion, releases: currentReleases };
+  }));
 
   // check the last lts to strip environment file data
   const lastlts = latestLtsData[latestLtsData.length - 1].name;
 
-  // extract the main environment data 
+  // extract the main environment data
   const allEnvData = envData["COMPATIBILITY_MATRIX"]["MOODLE"];
 
   let envDataIndex = 0;
@@ -236,13 +270,13 @@ async function mergeData(versionsData, envData) {
 
   // store the info by the createRequirementsObject function
   while (envDataIndex < allEnvData.length) {
-    requirementData[allEnvData[envDataIndex]["version"][0]] = createRequirementsObject(allEnvData[envDataIndex]);
+    requirementData[allEnvData[envDataIndex]["version"][0]] =
+      createRequirementsObject(allEnvData[envDataIndex]);
     ++envDataIndex;
   }
 
-  // iterate over the LTS version data to append the environment requirement data 
+  // iterate over the LTS version data to append the environment requirement data
   for (let i = 0; i < latestLtsData.length; ++i) {
-
     let currentVersion = latestLtsData[i].name;
 
     // skip if environment doesn't exist of any version
@@ -257,38 +291,37 @@ async function mergeData(versionsData, envData) {
 
   // write data to file
   writeVersionFile(latestLtsData);
-
 }
 
 /**
- * Main function to execute all the workflow and generate a file 
+ * Main function to execute all the workflow and generate a file
  */
 async function main() {
   console.log("Start executing main function");
 
   try {
     // Read the contents of the XML file
-    const environmentXML = await fs.readFile('./environment/environment.xml');
+    const environmentXML = await readFile("./environment/environment.xml");
 
-    // Read the content of versions.json which 
-    const versionsData = JSON.parse(await fs.readFile('moodleVersions.json', 'utf-8'));
+    // Read the content of versions.json which
+    const versionsData = JSON.parse(
+      await readFile("moodleVersions.json", "utf-8")
+    );
 
     // Parse the XML data using the xml2js module
     parseString(environmentXML, { mergeAttrs: true }, (err, result) => {
       if (err) {
-        throw err
+        throw err;
       }
 
       const envData = JSON.parse(JSON.stringify(result));
 
       mergeData(versionsData, envData);
     });
-
   } catch (err) {
-    console.log(err)
+    console.log(err);
   }
 }
 
 // call main function to perform operation
 main();
-
