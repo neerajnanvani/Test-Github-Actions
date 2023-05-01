@@ -44,7 +44,7 @@ jobs:
         run: ls & pwd
 
       - name: Install Dependencies
-        run: npm ci --prefix githubAction/
+        run: npm install --prefix githubAction/
 
       - name: Run JS file
         run: node githubAction/test.js
