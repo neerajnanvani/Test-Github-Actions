@@ -17,9 +17,6 @@ jobs:
       - name: Checkout to repo
         uses: actions/checkout@v3
 
-      - name: Go to github action folder
-        run: cd githubAction
-
       - name: Install unzip
         run: sudo apt-get update && sudo apt-get install -y unzip
 
@@ -47,10 +44,10 @@ jobs:
         run: ls & pwd
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci --prefix githubAction/
 
       - name: Run JS file
-        run: node test.js
+        run: node githubAction/test.js
       
       - name: Check for errors
         if: ${{ failure() }}
