@@ -20,7 +20,7 @@ jobs:
 
       - name: Download file if cache miss
         if: steps.cache-check.outputs.cache-hit != 'true'
-        run: wget https://raw.githubusercontent.com/jonof/moodle-antivirus_savdi/master/version.php -O pluginVersion.php
+        run: wget https://raw.githubusercontent.com/jonof/moodle-antivirus_savdi/master/version.php -O ~/.cache/pluginVersion.php
 
       - name: Copy file from cache
         run: cp ~/.cache/pluginVersion.php ./pluginVersion.php
