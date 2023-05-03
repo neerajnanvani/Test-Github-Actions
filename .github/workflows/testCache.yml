@@ -20,17 +20,19 @@ jobs:
 
       - name: Download file if cache miss
         if: steps.cache-check.outputs.cache-hit != 'true'
-        run: wget https://raw.githubusercontent.com/jonof/moodle-antivirus_savdi/master/version.php -O ~/.cache/pluginVersion.php
+        run: wget https://raw.githubusercontent.com/jonof/moodle-antivirus_savdi/master/version.php -O pluginVersion.php
 
-      - name: Copy file from cache
-        run: cp ~/.cache/pluginVersion.php ./pluginVersion.php
-
+      
       - name: Save cache
         if: steps.cache-check.outputs.cache-hit != 'true'
         uses: actions/cache@v2
         with:
           path: ~/.cache/pluginVersion.php
           key: my-cache-key
+
+      - name: Copy file from cache
+        run: cp ~/.cache/pluginVersion.php ./pluginVersion.php
+      
 
       - name: Current directory
         run: ls & pwd
