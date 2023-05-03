@@ -10,39 +10,64 @@ jobs:
   run-once:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout to repo
-        uses: actions/checkout@v3
+      - name: Check cache for file
+        id: cache-check
+        uses: actions/cache@v3
+        with:
+          key: my-cache-key
+          path: ~/.cache/pluginVersion.php
 
-      - name: Download plugin Versions file
-        run: |
-          echo "Starting the download"
-          wget https://raw.githubusercontent.com/jonof/moodle-antivirus_savdi/master/version.php -O pluginVersion.php
-          echo "Download completed"
+
+      - name: Download file if cache miss
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        run: wget https://raw.githubusercontent.com/jonof/moodle-antivirus_savdi/master/version.php -O pluginVersion.php
+
+      - name: Copy file from cache
+        run: cp ~/.cache/pluginVersion.php ./pluginVersion.php
+
+      - name: Save cache
+        if: steps.cache-check.outputs.cache-hit != 'true'
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pluginVersion.php
+          key: my-cache-key
 
       - name: Current directory
         run: ls & pwd
 
-      - name: Store data in cache
-        uses: actions/cache/save@v3
-        with:
-          path: pluginVersion.php
-          key: ${{ runner.os }}-pluginVersion
+      # - name: Checkout to repo
+      #   uses: actions/checkout@v3
+
+      # - name: Download plugin Versions file
+      #   run: |
+      #     echo "Starting the download"
+      #     wget https://raw.githubusercontent.com/jonof/moodle-antivirus_savdi/master/version.php -O pluginVersion.php
+      #     echo "Download completed"
+
+      # - name: Current directory
+      #   run: ls & pwd
+
+      # - name: Store data in cache
+      #   uses: actions/cache/save@v3
+      #   with:
+      #     path: pluginVersion.php
+      #     key: ${{ runner.os }}-pluginVersion
           
 
-      - name: Retrieve data from cache
-        run: |
-          cached_data_path=$HOME/.cache/{{ runner.os }}-pluginVersion/pluginVersion.php
-          if [ -f "$cached_data_path" ]; then
-            cached_data=$(cat "$cached_data_path")
-            echo "Cached data: $cached_data"
-            cp "$cached_file_path" ./
-          else
-            echo "Cached file not found."
-            exit 1
-          fi
+      # - name: Retrieve data from cache
+      #   run: |
+      #     cached_data_path=$HOME/.cache/{{ runner.os }}-pluginVersion/pluginVersion.php
+      #     if [ -f "$cached_data_path" ]; then
+      #       cached_data=$(cat "$cached_data_path")
+      #       echo "Cached data: $cached_data"
+      #       cp "$cached_file_path" ./
+      #     else
+      #       echo "Cached file not found."
+      #       exit 1
+      #     fi
       
-      - name: Current directory
-        run: ls & pwd
+      # - name: Current directory
+      #   run: ls & pwd
       
 
 
