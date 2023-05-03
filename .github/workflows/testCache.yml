@@ -31,7 +31,7 @@ jobs:
 
       - name: Retrieve data from cache
         run: |
-          cached_data_path=$HOME/.cache/pluginVersion/pluginVersion.php
+          cached_data_path=$HOME/.cache/{{ runner.os }}-pluginVersion/pluginVersion.php
           if [ -f "$cached_data_path" ]; then
             cached_data=$(cat "$cached_data_path")
             echo "Cached data: $cached_data"
