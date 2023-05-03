@@ -15,7 +15,7 @@ jobs:
         uses: actions/cache@v3
         with:
           key: my-cache-key
-          path: ~/.cache/pluginVersion.php
+          path: pluginVersion.php
 
 
       - name: Download file if cache miss
@@ -25,13 +25,16 @@ jobs:
       
       - name: Save cache
         if: steps.cache-check.outputs.cache-hit != 'true'
-        uses: actions/cache@v2
+        uses: actions/cache/save@v3
         with:
-          path: ~/.cache/pluginVersion.php
+          path: pluginVersion.php
           key: my-cache-key
 
-      - name: Copy file from cache
-        run: cp ~/.cache/pluginVersion.php ./pluginVersion.php
+      - name: Restore 
+        uses: actions/cache/restore@v3
+        with: 
+          path: pluginVersion.php
+          key: my-cache-key
       
 
       - name: Current directory
