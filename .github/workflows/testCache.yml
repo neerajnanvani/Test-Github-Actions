@@ -19,11 +19,15 @@ jobs:
           wget https://raw.githubusercontent.com/jonof/moodle-antivirus_savdi/master/version.php -O pluginVersion.php
           echo "Download completed"
 
+      - name: Current directory
+        run: ls & pwd
+
       - name: Store data in cache
         uses: actions/cache@v3
         with:
-          key: pluginVersion
           path: pluginVersion.php
+          key: ${{ runner.os }}-pluginVersion
+          
 
       - name: Retrieve data from cache
         run: |
